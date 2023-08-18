@@ -1,9 +1,15 @@
+ const { REDIS_URL } = process.env;
+const redis = require("redis");
+const client = redis.createClient({ url: REDIS_URL });
+// This is going to write any Redis error to console.
+client.on("error", (error) => {
+  console.error(error);
+});
+
+
  const express = require("express");
   const app = express();
   const port = 3000;
-  
-  const { REDIS_URL } = process.env;
-console.log(REDIS_URL);
 
   app.use(express.json({ limit: '10kb' }));
 
