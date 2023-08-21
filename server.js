@@ -66,6 +66,50 @@ const newLottery = {
 });
 
 
+app.get('/lotteries/:id', async (req, res) => {
+  const loterryId = parseInt(req.params.id);
+
+  try {
+    await client.connect();
+
+    const lottery = await client.hGetAll(`lottery.${loterryId}`);
+
+   if (!Object.keys(lottery).length) {
+    res
+      .status(404)
+      .json({ error: "A lottery with the given ID does not exist" });
+    return;
+  }
+
+   res.json(result);
+  } catch (error) {
+    console.error(error);
+  res.status(500).json({ error: "Failed to create lottery" });
+  } finally {
+    await client.disconnect();
+  }
+  });
+
+  app.get("/lotteries", async (req, res) => {
+    try {
+
+      await client.connect();
+      const lotteryIds = await client.lRange("lotteries", 0, -1);
+  
+      const transaction = client.multi();
+      lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
+      const lotteries = await transaction.exec();
+  
+      res.json(lotteries);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to read the lotteries data" });
+    } finally {
+      await client.disconnect();
+    }
+  });
+
+
   app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
   });
