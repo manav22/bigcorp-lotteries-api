@@ -74,6 +74,7 @@ app.get('/lotteries/:id', async (req, res) => {
 
     const lottery = await client.hGetAll(`lottery.${loterryId}`);
 
+    res.json(lottery);
    if (!Object.keys(lottery).length) {
     res
       .status(404)
@@ -81,7 +82,7 @@ app.get('/lotteries/:id', async (req, res) => {
     return;
   }
 
-   res.json(result);
+   res.json(lottery);
   } catch (error) {
     console.error(error);
   res.status(500).json({ error: "Failed to create lottery" });
