@@ -65,6 +65,59 @@ const newLottery = {
   }
 });
 
+app.post("/register", async (req, res) => {
+
+  const requiredFieldId = 'id';
+  const requiredFieldName = 'name';
+  const { id, name } = req.body;
+  
+  // return res.status(200).json({id, name});
+  if (!id) {
+    return res.status(400).json({error: `Missing required field: ${requiredFieldId}`});
+  }
+
+  if (!name) {
+    return res.status(400).json({error: `Missing required field: ${requiredFieldName}`});
+  }
+
+  const listOfLotteries = await getAllLotteries();
+
+  let existingLottery = {};
+
+  for(const lottery of listOfLotteries) {
+    if (lottery.id === id) {
+      existingLottery = lottery;
+      break;
+    } else {
+      res.status(200).json({error: `lottery does not exist with given id: ${id}`});
+    }
+  }
+
+  const lotteryParticipant = {
+  id: existingLottery.id,
+  name: name,
+};
+
+  if (existingLottery.status ===  "running") {
+    try {
+      await client.connect();
+
+      await client
+            .multi()
+            .hSet(`lotteryParticipant.${id}`, lotteryParticipant)
+            .lPush("participants", id)
+            .exec();
+
+      await client.disconnect();
+      res.json(lotteryParticipant);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to create lottery" });
+    }
+  }
+
+
+});
 
 app.get('/lotteries/:id', async (req, res) => {
   const loterryId = parseInt(req.params.id);
@@ -74,7 +127,6 @@ app.get('/lotteries/:id', async (req, res) => {
 
     const lottery = await client.hGetAll(`lottery.${loterryId}`);
 
-    res.json(lottery);
    if (!Object.keys(lottery).length) {
     res
       .status(404)
@@ -91,24 +143,34 @@ app.get('/lotteries/:id', async (req, res) => {
   }
   });
 
-  app.get("/lotteries", async (req, res) => {
-    try {
+  
+    
+    app.get("/lotteries", async (req, res) => {
+      
+      res.json(await getAllLotteries());
+      
+    });
 
-      await client.connect();
-      const lotteryIds = await client.lRange("lotteries", 0, -1);
+    async function getAllLotteries() {
+      let lotteries
+      try {
   
-      const transaction = client.multi();
-      lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
-      const lotteries = await transaction.exec();
-  
-      res.json(lotteries);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Failed to read the lotteries data" });
-    } finally {
-      await client.disconnect();
+        await client.connect();
+        const lotteryIds = await client.lRange("lotteries", 0, -1);
+    
+        const transaction = client.multi();
+        lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
+        lotteries = await transaction.exec();
+        return lotteries
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to read the lotteries data" });
+      } finally {
+        await client.disconnect();
+      }
     }
-  });
+  
 
 
   app.listen(port, () => {
