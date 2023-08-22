@@ -4,11 +4,18 @@ const ulid = require("ulid");
 const { REDIS_URL } = process.env;
 const redis = require("redis");
 const client = redis.createClient({ url: REDIS_URL });
+
 // This is going to write any Redis error to console.
 client.on("error", (error) => {
   console.error(error);
 });
 
+const cors = require("cors"); 
+if (process.env.NODE_ENV === "development") {
+  // Enabling Cross-Origin Resource Sharing in development, as we run
+  // the frontend and the backend code on different ports while developing.
+  app.use(cors());
+}
 
  const express = require("express");
   const app = express();
