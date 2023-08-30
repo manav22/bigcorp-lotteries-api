@@ -10,20 +10,23 @@ client.on("error", (error) => {
   console.error(error);
 });
 
-const cors = require("cors"); 
+
+
+const express = require("express");
+const app = express();
+const port = 3000;
+
+const cors = require("cors");
 if (process.env.NODE_ENV === "development") {
+  console.log("are we getting here?")
   // Enabling Cross-Origin Resource Sharing in development, as we run
   // the frontend and the backend code on different ports while developing.
   app.use(cors());
 }
 
- const express = require("express");
-  const app = express();
-  const port = 3000;
+app.use(express.json({ limit: '10kb' }));
 
-  app.use(express.json({ limit: '10kb' }));
-
-  app.get("/", (req, res) => {
+app.get("/", (req, res) => {
   // Send an empty object as the response.
   res.json({});
 });
@@ -45,14 +48,14 @@ app.post("/lotteries", async (req, res) => {
     return;
   }
 
-const id = ulid.ulid();
-const newLottery = {
-  id,
-  name,
-  prize,
-  type,
-  status: "running",
-};
+  const id = ulid.ulid();
+  const newLottery = {
+    id,
+    name,
+    prize,
+    type,
+    status: "running",
+  };
 
 
   try {
@@ -64,11 +67,11 @@ const newLottery = {
       .lPush("lotteries", id)
       .exec();
 
-   await client.disconnect();
-   res.json(newLottery);
- } catch (error) {
-  console.error(error);
-  res.status(500).json({ error: "Failed to create lottery" });
+    await client.disconnect();
+    res.json(newLottery);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create lottery" });
   }
 });
 
@@ -77,43 +80,45 @@ app.post("/register", async (req, res) => {
   const requiredFieldId = 'id';
   const requiredFieldName = 'name';
   const { id, name } = req.body;
-  
+
+  console.log("body for register", req, req.body, id, name);
+
   // return res.status(200).json({id, name});
   if (!id) {
-    return res.status(400).json({error: `Missing required field: ${requiredFieldId}`});
+    return res.status(400).json({ error: `Missing required field: ${requiredFieldId}` });
   }
 
   if (!name) {
-    return res.status(400).json({error: `Missing required field: ${requiredFieldName}`});
+    return res.status(400).json({ error: `Missing required field: ${requiredFieldName}` });
   }
 
   const listOfLotteries = await getAllLotteries();
 
   let existingLottery = {};
 
-  for(const lottery of listOfLotteries) {
+  for (const lottery of listOfLotteries) {
     if (lottery.id === id) {
       existingLottery = lottery;
       break;
     } else {
-      res.status(200).json({error: `lottery does not exist with given id: ${id}`});
+      res.status(200).json({ error: `lottery does not exist with given id: ${id}` });
     }
   }
 
   const lotteryParticipant = {
-  id: existingLottery.id,
-  name: name,
-};
+    id: existingLottery.id,
+    name: name,
+  };
 
-  if (existingLottery.status ===  "running") {
+  if (existingLottery.status === "running") {
     try {
       await client.connect();
 
       await client
-            .multi()
-            .hSet(`lotteryParticipant.${id}`, lotteryParticipant)
-            .lPush("participants", id)
-            .exec();
+        .multi()
+        .hSet(`lotteryParticipant.${id}`, lotteryParticipant)
+        .lPush("participants", id)
+        .exec();
 
       await client.disconnect();
       res.json(lotteryParticipant);
@@ -134,52 +139,52 @@ app.get('/lotteries/:id', async (req, res) => {
 
     const lottery = await client.hGetAll(`lottery.${loterryId}`);
 
-   if (!Object.keys(lottery).length) {
-    res
-      .status(404)
-      .json({ error: "A lottery with the given ID does not exist" });
-    return;
-  }
+    if (!Object.keys(lottery).length) {
+      res
+        .status(404)
+        .json({ error: "A lottery with the given ID does not exist" });
+      return;
+    }
 
-   res.json(lottery);
+    res.json(lottery);
   } catch (error) {
     console.error(error);
-  res.status(500).json({ error: "Failed to create lottery" });
+    res.status(500).json({ error: "Failed to create lottery" });
   } finally {
     await client.disconnect();
   }
-  });
-
-  
-    
-    app.get("/lotteries", async (req, res) => {
-      
-      res.json(await getAllLotteries());
-      
-    });
-
-    async function getAllLotteries() {
-      let lotteries
-      try {
-  
-        await client.connect();
-        const lotteryIds = await client.lRange("lotteries", 0, -1);
-    
-        const transaction = client.multi();
-        lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
-        lotteries = await transaction.exec();
-        return lotteries
-
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to read the lotteries data" });
-      } finally {
-        await client.disconnect();
-      }
-    }
-  
+});
 
 
-  app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-  });
+
+app.get("/lotteries", async (req, res) => {
+  res.json(await getAllLotteries());
+
+});
+
+async function getAllLotteries() {
+  let lotteries
+  try {
+
+    await client.connect();
+
+    const lotteryIds = await client.lRange("lotteries", 0, -1);
+
+    const transaction = client.multi();
+    lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
+    lotteries = await transaction.exec();
+    return lotteries
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to read the lotteries data" });
+  } finally {
+    await client.disconnect();
+  }
+}
+
+
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
