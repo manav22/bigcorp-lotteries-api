@@ -1,5 +1,4 @@
 import { appState } from "./appState";
-import { api_url } from "./constants";
 
 function createRow(name, value) {
   const div = document.createElement("div");
@@ -65,10 +64,14 @@ export async function updateLotteries() {
   // TODO: Obtain the lottery data from the GET /lotteries endpoint.
   // 1. Use the `fetch` API to make the request.
   // 2. Update each lottery using the `updateLottery` function above.
-  const responseData = await fetch(api_url + '/lotteries');
-  const lotteries = await responseData.json();
-  
-  for(const lottery of lotteries) {
-    updateLottery(lottery)
+  try {
+    const responseData = await fetch(`${import.meta.env.VITE_API_URL}/lotteries`);
+    const lotteries = await responseData.json();
+
+    for (const lottery of lotteries) {
+      updateLottery(lottery)
+    }
+  } catch (error) {
+    console.error("Error updating lotteries:", error.message);  
   }
 }

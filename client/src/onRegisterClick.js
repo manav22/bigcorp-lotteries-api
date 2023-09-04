@@ -1,5 +1,4 @@
 import { updateLotteries } from "./updateLotteries";
-import { api_url } from "./constants";
 
 export async function onRegisterClick() {
   const nameInput = document.getElementById("name");
@@ -30,7 +29,7 @@ export async function onRegisterClick() {
     const body = JSON.stringify(data)
     console.log(body);
 
-    const responseData = await fetch(api_url + '/register', {
+    const responseData = await fetch(`${import.meta.env.VITE_API_URL}/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -40,13 +39,4 @@ export async function onRegisterClick() {
     });
     console.log(await responseData.json());
   }
-
-
-  // const responseData = await fetch(api_url + '/register', {
-  //   body: JSON.stringify(data),
-  // });
-
-  // const name = nameInput.value;
-  // console.log(name);
-
 }
