@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build-client": "cd client && npm run build",
+    "prod": "npm run build-client && NODE_ENV=production node -r dotenv/config server.js",
     "dev": "NODE_ENV=development node -r dotenv/config server.js",
     "finalize-lottery": "node -r dotenv/config scripts/finalizeLottery.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"

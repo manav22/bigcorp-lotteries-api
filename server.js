@@ -18,7 +18,7 @@ const port = 3000;
 
 const cors = require("cors");
 if (process.env.NODE_ENV === "development") {
-  console.log("are we getting here?")
+  console.log("running in development environment")
   // Enabling Cross-Origin Resource Sharing in development, as we run
   // the frontend and the backend code on different ports while developing.
   app.use(cors());
@@ -183,7 +183,12 @@ async function getAllLotteries() {
   }
 }
 
+if (process.env.NODE_ENV === "production") {
+  // Serving the bundled frontend code together with the backend on the same port in production.
+  console.log("running in production environment")
 
+  app.use(express.static("client/dist"));
+}
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
