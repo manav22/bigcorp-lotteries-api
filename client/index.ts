@@ -3,8 +3,10 @@ import { updateLotteries } from "./src/updateLotteries";
 
 const POLLING_INVERVAL_IN_MS = 10_000;
 
-const registerButton = document.getElementById("register");
-registerButton.onclick = onRegisterClick;
+const registerButton: HTMLElement | null = document.getElementById("register");
+if(registerButton) {
+    registerButton.onclick = onRegisterClick;;
+}
 
 updateLotteries();
 

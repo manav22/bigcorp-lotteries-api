@@ -1,17 +1,18 @@
-import { updateLotteries } from "./updateLotteries";
 
-export async function onRegisterClick() {
-  const nameInput = document.getElementById("name");
+export async function onRegisterClick(): Promise<void> {
+  const nameInput = document.getElementById("name") as HTMLInputElement;
   const checkboxes = Array.from(
-    document.querySelectorAll("input[type=checkbox]")
+    document.querySelectorAll("input[type=checkbox]") as NodeListOf<HTMLInputElement>
   );
-  // updateLotteries();
-  // TODO: Register the user for each selected lottery using the POST /register endpoint.
-  // 1. Use the `fetch` API to make the request.
-  // 2. Obtain the user's name from the `nameInput` element.
-  // 3. Check status of the lottery checkboxes using the `checked` property.
 
-  for (const checkbox of checkboxes) {
+
+  if (!nameInput) {
+    return;
+  }
+
+  let checkbox: HTMLInputElement;
+
+  for (checkbox of checkboxes) {
 
     if (!checkbox.checked || !checkbox.id || !nameInput.value) {
       console.log("Lottery skipped: checkbox-checked: ", checkbox.checked,

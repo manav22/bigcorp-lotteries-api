@@ -1,22 +1,54 @@
+import { Request, Response } from 'express';
+import { Lottery } from './types';
+const express = require('express');
+const cors = require('cors');
+const redis = require('redis');
+const ulid = require('ulid');
 
-
-const ulid = require("ulid");
 const { REDIS_URL } = process.env;
-const redis = require("redis");
 const client = redis.createClient({ url: REDIS_URL });
 
+// Types
+type RequestBody<T> = {
+  body: T;
+}
+
+type SuccessResponse<T> = {
+  data: T;
+}
+
+type ErrorResponse = {
+  error: string;
+}
+
+type BaseParams<IDType = number> = {
+  id: IDType;
+}
+
+type APIResponse<T> = SuccessResponse<T> | ErrorResponse;
+
+type ResponseStatus = 'Success' | 'Error';
+
+type RegisterRequest = {
+  lotteryId: string;
+  name: string;
+}
+
+type RegisterResponse = {
+  status: ResponseStatus;
+}
+
+
 // This is going to write any Redis error to console.
-client.on("error", (error) => {
+client.on("error", (error: Error) => {
   console.error(error);
 });
 
 
 
-const express = require("express");
 const app = express();
 const port = 3000;
 
-const cors = require("cors");
 if (process.env.NODE_ENV === "development") {
   console.log("running in development environment")
   // Enabling Cross-Origin Resource Sharing in development, as we run
@@ -26,12 +58,12 @@ if (process.env.NODE_ENV === "development") {
 
 app.use(express.json({ limit: '10kb' }));
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response): void => {
   // Send an empty object as the response.
   res.json({});
 });
 
-app.post("/lotteries", async (req, res) => {
+app.post("/lotteries", async (req: Request, res: Response<Lottery | ErrorResponse>): Promise<void> => {
   const { type, name, prize } = req.body;
   if (type !== "simple") {
     res.status(422).json({ error: "Invalid lottery type" });
@@ -49,7 +81,7 @@ app.post("/lotteries", async (req, res) => {
   }
 
   const id = ulid.ulid();
-  const newLottery = {
+  const newLottery: Lottery = {
     id,
     name,
     prize,
@@ -68,6 +100,9 @@ app.post("/lotteries", async (req, res) => {
       .exec();
 
     await client.disconnect();
+
+    console.log('res', res)
+
     res.json(newLottery);
   } catch (error) {
     console.error(error);
@@ -75,7 +110,7 @@ app.post("/lotteries", async (req, res) => {
   }
 });
 
-app.post("/register", async (req, res) => {
+app.post("/register", async (req: Request<RequestBody<RegisterRequest>>, res: Response<RegisterResponse | ErrorResponse>): Promise<void> => {
 
   const requiredFieldId = 'id';
   const requiredFieldName = 'name';
@@ -85,54 +120,43 @@ app.post("/register", async (req, res) => {
 
   // return res.status(200).json({id, name});
   if (!id) {
-    return res.status(400).json({ error: `Missing required field: ${requiredFieldId}` });
+    res.status(400).json({ error: `Missing required field: ${requiredFieldId}` });
+    return;
   }
 
   if (!name) {
-    return res.status(400).json({ error: `Missing required field: ${requiredFieldName}` });
+    res.status(400).json({ error: `Missing required field: ${requiredFieldName}` });
+    return;
   }
 
-  const listOfLotteries = await getAllLotteries();
+  try {
+    const lotteryStatus = await client.hGet(`lottery.${id}`, "status");
 
-  let existingLottery = {};
-
-  for (const lottery of listOfLotteries) {
-    if (lottery.id === id) {
-      existingLottery = lottery;
-      break;
-    } else {
-      res.status(200).json({ error: `lottery does not exist with given id: ${id}` });
+    if (!lotteryStatus) {
+      throw new Error("A lottery with the given ID doesn't exist");
     }
-  }
 
-  const lotteryParticipant = {
-    id: existingLottery.id,
-    name: name,
-  };
+    if (lotteryStatus === "finished") {
+      throw new Error("A lottery with the given ID is already finished");
+    }
 
-  if (existingLottery.status === "running") {
-    try {
-      await client.connect();
+    await client.lPush(`lottery.${id}.participants`, name);
 
-      await client
-        .multi()
-        .hSet(`lotteryParticipant.${id}`, lotteryParticipant)
-        .lPush("participants", id)
-        .exec();
+    res.json({ status: "Success" });
+  } catch (error) {
 
-      await client.disconnect();
-      res.json(lotteryParticipant);
-    } catch (error) {
+    if (error instanceof Error) {
       console.error(error);
-      res.status(500).json({ error: "Failed to create lottery" });
+      res
+        .status(500)
+        .json({ error: `Failed to register for the lottery: ${error.message}` });
     }
   }
-
-
 });
 
-app.get('/lotteries/:id', async (req, res) => {
-  const loterryId = parseInt(req.params.id);
+
+app.get('/lotteries/:id', async (req: Request<BaseParams>, res: Response<Lottery | ErrorResponse>): Promise<void> => {
+  const loterryId = req.params.id;
 
   try {
     await client.connect();
@@ -157,13 +181,13 @@ app.get('/lotteries/:id', async (req, res) => {
 
 
 
-app.get("/lotteries", async (req, res) => {
-  res.json(await getAllLotteries());
+app.get("/lotteries", async (req: Request, res: Response<APIResponse<Lottery[]>>): Promise<void> => {
+  await getAllLotteries(res);
 
 });
 
-async function getAllLotteries() {
-  let lotteries
+async function getAllLotteries(res: Response<APIResponse<Lottery[]>>): Promise<Lottery[]> {
+  let lotteries: Array<Lottery>;
   try {
 
     await client.connect();
@@ -171,16 +195,18 @@ async function getAllLotteries() {
     const lotteryIds = await client.lRange("lotteries", 0, -1);
 
     const transaction = client.multi();
-    lotteryIds.forEach((id) => transaction.hGetAll(`lottery.${id}`));
+    lotteryIds.forEach((id: String) => transaction.hGetAll(`lottery.${id}`));
     lotteries = await transaction.exec();
     return lotteries
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to read the lotteries data" });
+
   } finally {
     await client.disconnect();
   }
+  return []
 }
 
 if (process.env.NODE_ENV === "production") {
