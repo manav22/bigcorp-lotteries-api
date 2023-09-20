@@ -7,6 +7,8 @@ const ulid = require('ulid');
 
 const { REDIS_URL } = process.env;
 const client = redis.createClient({ url: REDIS_URL });
+const app = express();
+const port = 3000;
 
 // Types
 type RequestBody<T> = {
@@ -44,10 +46,6 @@ client.on("error", (error: Error) => {
   console.error(error);
 });
 
-
-
-const app = express();
-const port = 3000;
 
 if (process.env.NODE_ENV === "development") {
   console.log("running in development environment")
@@ -181,9 +179,10 @@ app.get('/lotteries/:id', async (req: Request<BaseParams>, res: Response<Lottery
 
 
 
-app.get("/lotteries", async (req: Request, res: Response<APIResponse<Lottery[]>>): Promise<void> => {
-  await getAllLotteries(res);
-
+app.get("/lotteries", async (req: Request, res: Response<Lottery[]>, res1: Response<APIResponse<Lottery[]>>): Promise<void> => {
+  let allLotteries: Lottery[];
+  allLotteries = await getAllLotteries(res1);
+  res.json(allLotteries)
 });
 
 async function getAllLotteries(res: Response<APIResponse<Lottery[]>>): Promise<Lottery[]> {
