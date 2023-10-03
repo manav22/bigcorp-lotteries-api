@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Fab } from '@mui/material';
+import LotteryList from './components/LotteryList';
+import useLotteries from './hooks/useLotteries';
 import AddLotteryModal from './components/AddLotteryModal';
-import { useNewLottery } from './hooks/useNewLottery';
 import NewLotteryNotification from './components/NewLotteryNotification';
+import { useNewLottery } from './hooks/useNewLottery';
 
 function App() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [addLotteryModalOpen, setAddLotteryModalOpen] = useState(false);
   const { loading, error, lottery, createNewLottery, resetLottery } =
     useNewLottery();
+  const lotteries = useLotteries();
 
   useEffect(() => {
     if (lottery) {
@@ -30,6 +33,7 @@ function App() {
         height: '100vh',
       }}
     >
+      <LotteryList lotteries={lotteries.data} loading={lotteries.loading} />
       <AddLotteryModal
         open={addLotteryModalOpen}
         onClose={handleModalClose}

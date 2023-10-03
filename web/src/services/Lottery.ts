@@ -29,3 +29,17 @@ export async function createNewLottery({
     throw e;
   }
 }
+
+export async function getAllLotteries(): Promise<Lottery[]> {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/lotteries`);
+
+    const body = (await response.json()) as Array<Lottery>;
+
+    return body;
+  } catch (e) {
+    console.error(e);
+
+    throw e;
+  }
+}
