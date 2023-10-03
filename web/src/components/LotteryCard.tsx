@@ -1,12 +1,32 @@
-import { Box, Card, Typography } from '@mui/material';
+import { Box, Card, Typography, colors } from '@mui/material';
 import { Lottery } from '../types';
 import { Done, Sync } from '@mui/icons-material';
 
 interface Props {
   lottery: Lottery;
+  selected: boolean;
+  onSelect: () => void;
 }
 
-export default function LotteryCard({ lottery }: Props) {
+const selectedStyles = {
+  boxShadow: `inset 0 0 0 2px ${colors.blue[400]}`,
+};
+
+const disabledStyles = {
+  backgroundColor: colors.grey[100],
+};
+
+export default function LotteryCard({ lottery, selected, onSelect }: Props) {
+  const isDisabled = lottery.status === 'finished';
+
+  const handleSelect = () => {
+    if (isDisabled) {
+      return;
+    }
+
+    onSelect();
+  };
+
   return (
     <Card
       sx={{
@@ -16,8 +36,11 @@ export default function LotteryCard({ lottery }: Props) {
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
+        ...(isDisabled ? disabledStyles : {}),
+        ...(selected ? selectedStyles : {}),
       }}
       variant="outlined"
+      onClick={handleSelect}
     >
       <Typography variant="h6">{lottery.name}</Typography>
       <Typography variant="caption">{lottery.prize}</Typography>

@@ -5,10 +5,17 @@ import { Casino, SentimentVeryDissatisfied } from '@mui/icons-material';
 
 interface Props {
   lotteries: Array<Lottery>;
+  selectedLotteries: Array<string>;
   loading: boolean;
+  onSelect: (lotteryId: string) => void;
 }
 
-export default function LotteryList({ lotteries, loading }: Props) {
+export default function LotteryList({
+  lotteries,
+  selectedLotteries,
+  onSelect,
+  loading,
+}: Props) {
   return (
     <Box
       sx={{
@@ -57,7 +64,12 @@ export default function LotteryList({ lotteries, loading }: Props) {
           </Box>
         )}
         {lotteries.map((lottery) => (
-          <LotteryCard key={lottery.id} lottery={lottery} />
+          <LotteryCard
+            key={lottery.id}
+            lottery={lottery}
+            selected={selectedLotteries.includes(lottery.id)}
+            onSelect={() => onSelect(lottery.id)}
+          />
         ))}
       </Box>
     </Box>

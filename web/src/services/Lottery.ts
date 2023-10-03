@@ -43,3 +43,29 @@ export async function getAllLotteries(): Promise<Lottery[]> {
     throw e;
   }
 }
+
+export async function registerToLottery({
+  name,
+  lotteryId,
+}: {
+  name: string;
+  lotteryId: string;
+}) {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ lotteryId, name }),
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+  } catch (e) {
+    console.error(e);
+
+    throw e;
+  }
+}
