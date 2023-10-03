@@ -11,6 +11,7 @@ const lotterySchema = Yup.object({
 interface Props {
   open: boolean;
   onClose: () => void;
+  onSubmit: () => void;
   createNewLottery: (lotteryData: {
     name: string;
     prize: string;
@@ -22,6 +23,7 @@ interface Props {
 export default function AddLotteryModal({
   open,
   onClose,
+  onSubmit,
   createNewLottery,
   loading,
   error,
@@ -42,6 +44,7 @@ export default function AddLotteryModal({
     onSubmit: (values) => {
       createNewLottery({ name: values.name, prize: values.prize })
         .then(() => {
+          onSubmit();
           handleClose();
         })
         .catch(() => {

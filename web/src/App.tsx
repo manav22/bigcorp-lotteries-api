@@ -14,6 +14,10 @@ function App() {
     useNewLottery();
   const lotteries = useLotteries();
 
+  const handleNewLottery = () => {
+    lotteries.fetchLotteries();
+  };
+
   useEffect(() => {
     if (lottery) {
       setNotificationOpen(true);
@@ -37,6 +41,7 @@ function App() {
       <AddLotteryModal
         open={addLotteryModalOpen}
         onClose={handleModalClose}
+        onSubmit={handleNewLottery}
         loading={loading}
         error={error}
         createNewLottery={createNewLottery}
