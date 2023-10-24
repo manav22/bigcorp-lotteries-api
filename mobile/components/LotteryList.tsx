@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   useWindowDimensions,
   Pressable,
+  Animated,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -31,6 +32,25 @@ function LotteryList({
 }: Props) {
   const [filter, setFilter] = useState('');
   const { width } = useWindowDimensions();
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [200, 60],
+    extrapolate: 'clamp',
+  });
+
+  const opacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const scale = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [1, 0.5],
+    extrapolate: 'clamp',
+  });
 
   const filteredLotteries = useMemo(
     () => lotteries?.filter((lottery) => lottery.name.includes(filter)),
@@ -38,7 +58,9 @@ function LotteryList({
   );
 
   const renderItem = ({ item }: { item: Lottery }) => {
+    const isDisabled = item.status === 'finished';
     const selected = selectedLotteries?.includes(item.id);
+    const background = isDisabled ? colors.grey : colors.secondary;
     const registered = registeredLotteries?.includes(item.id);
     return (
       <Pressable
@@ -46,12 +68,12 @@ function LotteryList({
         style={[
           styles.container,
           {
-            backgroundColor: registered ? colors.grey : colors.secondary,
+            backgroundColor: registered ? colors.lightBlue : background,
             borderColor: selected ? colors.buttonSecondary : colors.borderColor,
           },
         ]}
         onPress={() => onPress(item.id)}
-        disabled={registered}
+        disabled={isDisabled || registered}
       >
         <View style={styles.iconsContainer}>
           {item.status === 'running' && (
@@ -68,9 +90,8 @@ function LotteryList({
     );
   };
 
-  return (
-    <>
-      <SearchInput value={filter} onSearch={(val) => setFilter(val)} />
+  const SearchNoResult = () => (
+    <View>
       {lotteries.length !== 0 && filteredLotteries?.length === 0 && (
         <Text style={styles.text}> No search results for `{filter}`</Text>
       )}
@@ -84,17 +105,55 @@ function LotteryList({
           <Text style={styles.text}>There are no lotteries currently</Text>
         </View>
       )}
-      <FlatList
+    </View>
+  );
+
+  const Header = () => (
+    <Animated.View
+      style={[
+        styles.header,
+        {
+          height: headerHeight,
+          opacity,
+          transform: [
+            {
+              scale,
+            },
+          ],
+        },
+      ]}
+    >
+      <View style={styles.title}>
+        <Text style={styles.titleText}>Lotteries</Text>
+        <MaterialIcons name="casino" size={36} color="black" />
+      </View>
+      <SearchInput value={filter} onSearch={(val) => setFilter(val)} />
+      <SearchNoResult />
+    </Animated.View>
+  );
+
+  return (
+    <>
+      <Animated.FlatList
         data={filteredLotteries}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         style={{ width: width - 24 }}
+        ListHeaderComponent={Header}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
+        )}
       />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     marginBottom: 16,
     borderRadius: 4,
@@ -124,6 +183,15 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 24,
     marginTop: 16,
+  },
+  title: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  titleText: {
+    fontSize: 36,
+    marginRight: 16,
   },
 });
 

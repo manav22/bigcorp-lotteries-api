@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
-import { MaterialIcons } from '@expo/vector-icons';
 import FAB from '../components/Fab';
 import Loader from '../components/Loader';
 import { AddLotteryNavigationProp } from '../types';
@@ -15,15 +14,13 @@ function Home() {
   const navigation = useNavigation<AddLotteryNavigationProp>();
   const lotteries = useLotteries();
   const isFocused = useIsFocused();
-  const { storedData: registeredLotteries, getStoredData } = useAsyncStorage();
+  const { storedData: registeredLotteries } = useAsyncStorage();
 
   useEffect(() => {
     if (isFocused) {
       lotteries.fetchLotteries();
-      getStoredData();
       setSelectedLotteries([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
   if (lotteries.loading) {
@@ -54,10 +51,6 @@ function Home() {
       >
         <Text style={styles.text}>Register</Text>
       </TouchableOpacity>
-      <View style={styles.title}>
-        <Text style={styles.titleText}>Lotteries</Text>
-        <MaterialIcons name="casino" size={36} color="black" />
-      </View>
       <LotteryList
         lotteries={lotteries.data}
         loading={lotteries.loading}
@@ -77,16 +70,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.secondary,
     alignItems: 'center',
-    paddingTop: 30,
-  },
-  title: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  titleText: {
-    fontSize: 36,
-    marginRight: 16,
+    paddingTop: 50,
   },
   button: {
     position: 'absolute',
