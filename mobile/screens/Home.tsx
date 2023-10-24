@@ -8,8 +8,7 @@ import { AddLotteryNavigationProp } from '../types';
 import { colors } from '../colors';
 import LotteryList from '../components/LotteryList';
 import useLotteries from '../hooks/useLotteries';
-
-const Home = () => {
+function Home() {
   const navigation = useNavigation<AddLotteryNavigationProp>();
   const lotteries = useLotteries();
   const isFocused = useIsFocused();
@@ -35,7 +34,7 @@ const Home = () => {
       <FAB onPress={() => navigation.navigate('AddLottery')} />
     </View>
   );
-};
+}
 
 export default Home;
 
