@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import FAB from '../components/Fab';
+import Loader from '../components/Loader';
 import { AddLotteryNavigationProp } from '../types';
 import { colors } from '../colors';
+import LotteryList from '../components/LotteryList';
+import useLotteries from '../hooks/useLotteries';
 
-function Home() {
+const Home = () => {
   const navigation = useNavigation<AddLotteryNavigationProp>();
+  const lotteries = useLotteries();
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
+      lotteries.fetchLotteries();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
+
+  if (lotteries.loading) {
+    return <Loader />;
+  }
 
   return (
     <View style={styles.container}>
@@ -15,10 +31,11 @@ function Home() {
         <Text style={styles.titleText}>Lotteries</Text>
         <MaterialIcons name="casino" size={36} color="black" />
       </View>
+      <LotteryList lotteries={lotteries.data} loading={lotteries.loading} />
       <FAB onPress={() => navigation.navigate('AddLottery')} />
     </View>
   );
-}
+};
 
 export default Home;
 
@@ -27,7 +44,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.secondary,
     alignItems: 'center',
-    paddingTop: 64,
+    paddingTop: 30,
   },
   title: {
     flexDirection: 'row',

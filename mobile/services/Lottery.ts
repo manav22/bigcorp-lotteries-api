@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+// eslint-disable-next-line import/no-unresolved
 import { API_URL_IOS, API_URL_ANDROID } from '@env';
 import { Lottery } from '../types';
 
