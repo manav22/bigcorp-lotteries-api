@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import FAB from '../components/Fab';
@@ -8,14 +8,20 @@ import { AddLotteryNavigationProp } from '../types';
 import { colors } from '../colors';
 import LotteryList from '../components/LotteryList';
 import useLotteries from '../hooks/useLotteries';
+import useAsyncStorage from '../hooks/useAsyncStorage';
+
 function Home() {
+  const [selectedLotteries, setSelectedLotteries] = useState<Array<string>>([]);
   const navigation = useNavigation<AddLotteryNavigationProp>();
   const lotteries = useLotteries();
   const isFocused = useIsFocused();
+  const { storedData: registeredLotteries, getStoredData } = useAsyncStorage();
 
   useEffect(() => {
     if (isFocused) {
       lotteries.fetchLotteries();
+      getStoredData();
+      setSelectedLotteries([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
@@ -24,13 +30,41 @@ function Home() {
     return <Loader />;
   }
 
+  const handleSelect = (lotteryId: string) => {
+    setSelectedLotteries((lotteries) => {
+      if (lotteries.includes(lotteryId)) {
+        const index = lotteries.indexOf(lotteryId);
+        return [...lotteries.slice(0, index), ...lotteries.slice(index + 1)];
+      } else {
+        return [...lotteries, lotteryId];
+      }
+    });
+  };
+
+  const backgroundColor =
+    selectedLotteries.length === 0 ? colors.grey : colors.secondary;
+
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={() => navigation.navigate('Register', { selectedLotteries })}
+        style={[styles.button, { backgroundColor }]}
+        disabled={selectedLotteries.length === 0}
+      >
+        <Text style={styles.text}>Register</Text>
+      </TouchableOpacity>
       <View style={styles.title}>
         <Text style={styles.titleText}>Lotteries</Text>
         <MaterialIcons name="casino" size={36} color="black" />
       </View>
-      <LotteryList lotteries={lotteries.data} loading={lotteries.loading} />
+      <LotteryList
+        lotteries={lotteries.data}
+        loading={lotteries.loading}
+        onPress={handleSelect}
+        selectedLotteries={selectedLotteries}
+        registeredLotteries={registeredLotteries || []}
+      />
       <FAB onPress={() => navigation.navigate('AddLottery')} />
     </View>
   );
@@ -48,9 +82,23 @@ const styles = StyleSheet.create({
   title: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 16,
   },
   titleText: {
     fontSize: 36,
     marginRight: 16,
+  },
+  button: {
+    position: 'absolute',
+    right: 16,
+    top: 8,
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  text: {
+    color: colors.buttonSecondary,
   },
 });

@@ -1,20 +1,39 @@
-import * as React from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from './screens/Home';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationOptions,
+} from '@react-navigation/native-stack';
+import { ToastProvider } from 'react-native-toast-notifications';
+import Home from './screens/Home';
 import AddLottery from './screens/AddLottery';
+import RegisterModal from './screens/RegisterModal';
+import { RootStackParamList } from './types';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-function App() {
+const options: NativeStackNavigationOptions = {
+  title: '',
+};
+
+export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="AddLottery" component={AddLottery} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ToastProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Group>
+            <Stack.Screen name="Home" component={Home} options={options} />
+            <Stack.Screen
+              name="AddLottery"
+              component={AddLottery}
+              options={options}
+            />
+          </Stack.Group>
+          <Stack.Group screenOptions={{ presentation: 'modal' }}>
+            <Stack.Screen name="Register" component={RegisterModal} />
+          </Stack.Group>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ToastProvider>
   );
 }
-
-export default App;

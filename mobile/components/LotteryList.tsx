@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   useWindowDimensions,
+  Pressable,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,9 +16,19 @@ import SearchInput from './SearchInput';
 type Props = {
   lotteries: Lottery[];
   loading: boolean;
+  onPress: (id: string) => void;
+  selectedLotteries: Array<string>;
+  registeredLotteries: Array<string>;
+  registered?: boolean;
 };
 
-function LotteryList({ lotteries, loading }: Props) {
+function LotteryList({
+  lotteries,
+  loading,
+  onPress,
+  selectedLotteries,
+  registeredLotteries,
+}: Props) {
   const [filter, setFilter] = useState('');
   const { width } = useWindowDimensions();
 
@@ -27,8 +38,21 @@ function LotteryList({ lotteries, loading }: Props) {
   );
 
   const renderItem = ({ item }: { item: Lottery }) => {
+    const selected = selectedLotteries?.includes(item.id);
+    const registered = registeredLotteries?.includes(item.id);
     return (
-      <View style={styles.container}>
+      <Pressable
+        accessibilityRole="button"
+        style={[
+          styles.container,
+          {
+            backgroundColor: registered ? colors.grey : colors.secondary,
+            borderColor: selected ? colors.buttonSecondary : colors.borderColor,
+          },
+        ]}
+        onPress={() => onPress(item.id)}
+        disabled={registered}
+      >
         <View style={styles.iconsContainer}>
           {item.status === 'running' && (
             <AntDesign name="sync" size={24} color="black" />
@@ -40,7 +64,7 @@ function LotteryList({ lotteries, loading }: Props) {
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.prize}>{item.prize}</Text>
         <Text style={styles.id}>{item.id}</Text>
-      </View>
+      </Pressable>
     );
   };
 
@@ -76,7 +100,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.borderColor,
   },
   iconsContainer: {
     alignSelf: 'flex-end',
