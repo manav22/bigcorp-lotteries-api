@@ -91,9 +91,6 @@ function LotteryList({
           </View>
           <Text style={styles.name}>{item.name}</Text>
         </TouchableOpacity>
-
-        <Text style={styles.prize}>{item.prize}</Text>
-        <Text style={styles.id}>{item.id}</Text>
       </Pressable>
     );
   };
