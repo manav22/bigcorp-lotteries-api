@@ -29,4 +29,9 @@ export type LotteryDetailsNavigationProp = StackNavigationProp<
   'LotteryDetails'
 >;
 
+export type LotteryDetailsRouteProp = RouteProp<
+  RootStackParamList,
+  'LotteryDetails'
+>;
+
 export type RegisterScreenRouteProp = RouteProp<RootStackParamList, 'Register'>;
