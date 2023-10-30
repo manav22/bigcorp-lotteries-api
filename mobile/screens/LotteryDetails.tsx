@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Lottery, LotteryDetailsRouteProp } from '../types';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useEffect } from 'react';
 import { useLotteryDetails } from '../hooks/useLotteryDetails';
 import Loader from '../components/Loader';
 import { colors } from '../colors';
-
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LotteryDetailsError } from './LotteryDetailsError';
 /* ----- DATA PROVIDER ----- */
 
 interface LotteryDetailsDataProviderProps {
@@ -54,13 +55,18 @@ const LotteryDetailsView = ({ lottery }: LotteryDetailsViewProps) => {
   );
 };
 
+/* ----- SCREEN ----- */
+const fallback = <LotteryDetailsError />;
+
 function LotteryDetails() {
   const route = useRoute<LotteryDetailsRouteProp>();
 
   return (
-    <LotteryDetailsDataProvider lotteryId={route.params.id}>
-      {(lotteryDetails) => <LotteryDetailsView lottery={lotteryDetails} />}
-    </LotteryDetailsDataProvider>
+    <ErrorBoundary fallback={fallback}>
+      <LotteryDetailsDataProvider lotteryId={route.params.id}>
+        {(lotteryDetails) => <LotteryDetailsView lottery={lotteryDetails} />}
+      </LotteryDetailsDataProvider>
+    </ErrorBoundary>
   );
 }
 
