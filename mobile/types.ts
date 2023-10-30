@@ -15,12 +15,18 @@ export type RootStackParamList = {
   Home: undefined;
   AddLottery: undefined;
   Register: { selectedLotteries: Array<string> };
+  LotteryDetails: { id: string };
 };
 
 export type AddLotteryNavigationProp = StackNavigationProp<
   RootStackParamList,
   'AddLottery',
   'Register'
+>;
+
+export type LotteryDetailsNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'LotteryDetails'
 >;
 
 export type RegisterScreenRouteProp = RouteProp<RootStackParamList, 'Register'>;

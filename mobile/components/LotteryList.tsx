@@ -7,12 +7,14 @@ import {
   useWindowDimensions,
   Pressable,
   Animated,
+  TouchableOpacity,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Lottery } from '../types';
+import { Lottery, LotteryDetailsNavigationProp } from '../types';
 import { colors } from '../colors';
 import SearchInput from './SearchInput';
+import { useNavigation } from '@react-navigation/native';
 
 type Props = {
   lotteries: Lottery[];
@@ -33,6 +35,7 @@ function LotteryList({
   const [filter, setFilter] = useState('');
   const { width } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const navigation = useNavigation<LotteryDetailsNavigationProp>();
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -63,27 +66,32 @@ function LotteryList({
     const background = isDisabled ? colors.grey : colors.secondary;
     const registered = registeredLotteries?.includes(item.id);
     return (
-      <Pressable
-        accessibilityRole="button"
-        style={[
-          styles.container,
-          {
-            backgroundColor: registered ? colors.lightBlue : background,
-            borderColor: selected ? colors.buttonSecondary : colors.borderColor,
-          },
-        ]}
-        onPress={() => onPress(item.id)}
-        disabled={isDisabled || registered}
-      >
-        <View style={styles.iconsContainer}>
-          {item.status === 'running' && (
-            <AntDesign name="sync" size={24} color="black" />
-          )}
-          {item.status == 'finished' && (
-            <MaterialIcons name="done" size={24} color="black" />
-          )}
-        </View>
-        <Text style={styles.name}>{item.name}</Text>
+      <Pressable>
+        <TouchableOpacity
+          accessibilityRole="button"
+          style={[
+            styles.container,
+            {
+              backgroundColor: registered ? colors.lightBlue : background,
+              borderColor: selected
+                ? colors.buttonSecondary
+                : colors.borderColor,
+            },
+          ]}
+          onPress={() => navigation.navigate('LotteryDetails', { id: item.id })}
+          disabled={isDisabled || registered}
+        >
+          <View style={styles.iconsContainer}>
+            {item.status === 'running' && (
+              <AntDesign name="sync" size={24} color="black" />
+            )}
+            {item.status == 'finished' && (
+              <MaterialIcons name="done" size={24} color="black" />
+            )}
+          </View>
+          <Text style={styles.name}>{item.name}</Text>
+        </TouchableOpacity>
+
         <Text style={styles.prize}>{item.prize}</Text>
         <Text style={styles.id}>{item.id}</Text>
       </Pressable>
