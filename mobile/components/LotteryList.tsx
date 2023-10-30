@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   useWindowDimensions,
   Pressable,
   Animated,
@@ -11,10 +10,14 @@ import {
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Lottery, LotteryDetailsNavigationProp } from '../types';
-import { colors } from '../colors';
-import SearchInput from './SearchInput';
 import { useNavigation } from '@react-navigation/native';
+import { LotteryDetailsNavigationProp, Lottery } from '../types';
+import { colors } from '../colors';
+import {
+  LotteryListSortingOptions,
+  useLotteriesSortingContext,
+} from '../context/lotteries-sorting-context';
+import SearchInput from './SearchInput';
 
 type Props = {
   lotteries: Lottery[];
@@ -35,7 +38,10 @@ function LotteryList({
   const [filter, setFilter] = useState('');
   const { width } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
+
   const navigation = useNavigation<LotteryDetailsNavigationProp>();
+
+  const { selectedSorting } = useLotteriesSortingContext();
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 200],
@@ -56,8 +62,15 @@ function LotteryList({
   });
 
   const filteredLotteries = useMemo(
-    () => lotteries?.filter((lottery) => lottery.name.includes(filter)),
-    [filter, lotteries],
+    () =>
+      lotteries
+        ?.filter((lottery) => lottery.name.includes(filter))
+        .sort((a, b) =>
+          selectedSorting === LotteryListSortingOptions.Ascending
+            ? Number(a.prize) - Number(b.prize)
+            : Number(b.prize) - Number(a.prize),
+        ),
+    [filter, lotteries, selectedSorting],
   );
 
   const renderItem = ({ item }: { item: Lottery }) => {
@@ -66,31 +79,34 @@ function LotteryList({
     const background = isDisabled ? colors.grey : colors.secondary;
     const registered = registeredLotteries?.includes(item.id);
     return (
-      <Pressable>
+      <Pressable
+        accessibilityRole="button"
+        style={[
+          styles.container,
+          {
+            backgroundColor: registered ? colors.lightBlue : background,
+            borderColor: selected ? colors.buttonSecondary : colors.borderColor,
+          },
+        ]}
+        onPress={() => onPress(item.id)}
+        disabled={isDisabled || registered}
+      >
+        <View style={styles.iconsContainer}>
+          {item.status === 'running' && (
+            <AntDesign name="sync" size={24} color="black" />
+          )}
+          {item.status == 'finished' && (
+            <MaterialIcons name="done" size={24} color="black" />
+          )}
+        </View>
         <TouchableOpacity
           accessibilityRole="button"
-          style={[
-            styles.container,
-            {
-              backgroundColor: registered ? colors.lightBlue : background,
-              borderColor: selected
-                ? colors.buttonSecondary
-                : colors.borderColor,
-            },
-          ]}
           onPress={() => navigation.navigate('LotteryDetails', { id: item.id })}
-          disabled={isDisabled || registered}
         >
-          <View style={styles.iconsContainer}>
-            {item.status === 'running' && (
-              <AntDesign name="sync" size={24} color="black" />
-            )}
-            {item.status == 'finished' && (
-              <MaterialIcons name="done" size={24} color="black" />
-            )}
-          </View>
           <Text style={styles.name}>{item.name}</Text>
         </TouchableOpacity>
+        <Text style={styles.prize}>{item.prize}</Text>
+        <Text style={styles.id}>{item.id}</Text>
       </Pressable>
     );
   };
