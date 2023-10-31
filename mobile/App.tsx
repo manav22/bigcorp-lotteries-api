@@ -29,16 +29,14 @@ export default function App() {
               component={AddLottery}
               options={options}
             />
-          </Stack.Group>
-          <Stack.Group screenOptions={{ presentation: 'modal' }}>
-            <Stack.Screen name="Register" component={RegisterModal} />
-          </Stack.Group>
-          <Stack.Group>
             <Stack.Screen
               name="LotteryDetails"
               component={LotteryDetails}
               options={options}
             />
+          </Stack.Group>
+          <Stack.Group screenOptions={{ presentation: 'modal' }}>
+            <Stack.Screen name="Register" component={RegisterModal} />
           </Stack.Group>
         </Stack.Navigator>
       </NavigationContainer>
