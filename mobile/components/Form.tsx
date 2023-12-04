@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useNewLottery } from '../hooks/useNewLottery';
+import { useDispatch, useSelector } from 'react-redux';
 import { colors } from '../colors';
+import { RootState } from '../store/reducers';
+import { addLottery } from '../store/actions/lotteryActions';
 
 type Props = {
   onSubmit: () => void;
@@ -22,7 +24,8 @@ const lotterySchema = Yup.object({
 });
 
 function LotteryForm(props: Props) {
-  const { error, loading, createNewLottery } = useNewLottery();
+  const dispatch = useDispatch();
+  const { error, loading } = useSelector((state: RootState) => state.lotteries);
 
   function handlePress() {
     formik.handleSubmit();
@@ -37,7 +40,7 @@ function LotteryForm(props: Props) {
       prize: '',
     },
     onSubmit: async (values) => {
-      await createNewLottery({ name: values.name, prize: values.prize });
+      dispatch(addLottery(values));
       props.onSubmit();
     },
   });
