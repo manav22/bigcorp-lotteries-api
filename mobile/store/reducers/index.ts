@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux';
-import lotteryReducer from './lotteryReducer';
+import lotteriesSlice from './lotteryReducer';
 
 const rootReducer = combineReducers({
-  lotteries: lotteryReducer,
+  lotteries: lotteriesSlice.reducer,
 });
 
 export default rootReducer;
